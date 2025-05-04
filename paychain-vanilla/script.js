@@ -1,0 +1,1 @@
+document.getElementById("app").innerText = "Welcome to PayChain Payroll (Vanilla JS)";

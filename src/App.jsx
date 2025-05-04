@@ -64,18 +64,18 @@ function App() {
   // Send ETH
   const sendETH = async () => {
     try {
-      if (!to || !amount) return toast.error("Lengkapi data!");
+      if (!to || !amount) return toast.error("Please complete the data!");
       const tx = await contract.sendETH(to, {
         value: ethers.utils.parseEther(amount)
       });
       await tx.wait();
-      toast.success("ETH berhasil dikirim!");
+      toast.success("ETH sent successfully!");
       setTo("");
       setAmount("");
       loadInfo();
       loadHistory();
     } catch (err) {
-      toast.error("Gagal mengirim ETH");
+      toast.error("Failed to send ETH");
     }
   };
 
@@ -84,11 +84,11 @@ function App() {
     try {
       const tx = await contract.withdraw();
       await tx.wait();
-      toast.success("Withdraw sukses!");
+      toast.success("Withdraw successful!");
       loadInfo();
       loadHistory();
     } catch (err) {
-      toast.error("Gagal withdraw (mungkin bukan owner)");
+      toast.error("Failed to withdraw (maybe not owner)");
     }
   };
 
@@ -100,67 +100,93 @@ function App() {
   }, [contract]);
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white flex flex-col items-center p-8">
+    <div className="min-h-screen bg-[#1a1a1a] text-white flex flex-col items-center p-8">
       <Toaster />
-      <h1 className="text-4xl font-extrabold text-yellow-400 mb-6">PayChain Payroll</h1>
+      
+      {/* Logo and Title Section */}
+      <div className="text-center mb-12">
+        <div className="text-6xl font-bold text-[#FFA500] mb-4">PC</div>
+        <h1 className="text-3xl font-bold text-[#FFA500] mb-2">PayChainPayRoll</h1>
+        <p className="text-gray-400 text-sm">Smart payroll system on blockchain — send & receive PTT with full control</p>
+      </div>
 
+      {/* Connect Wallet Button */}
       {!account ? (
         <button
           onClick={connectWallet}
-          className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 px-8 py-3 rounded-xl transition-all ease-in-out transform hover:scale-105"
+          className="bg-[#FFA500] text-black font-semibold px-8 py-3 rounded-lg mb-8 hover:bg-[#FFB733] transition-all"
         >
           Connect Wallet
         </button>
       ) : (
-        <p className="mb-4 text-lg text-green-400">Connected: {account}</p>
+        <p className="mb-8 text-green-400">Connected: {account}</p>
       )}
 
-      <div className="bg-gray-700 p-8 rounded-3xl w-full max-w-md shadow-xl mt-8">
-        <p className="text-lg mb-2 text-gray-300">Owner: <span className="text-yellow-300">{owner || "..."}</span></p>
-        <p className="text-lg mb-4 text-gray-300">Balance: <span className="text-yellow-300">{balance} ETH</span></p>
-
+      {/* Send Pharos Section */}
+      <div className="bg-[#2a2a2a] p-6 rounded-lg w-full max-w-md shadow-lg mb-8">
+        <h2 className="text-[#FFA500] text-xl font-semibold mb-4">Send Pharos</h2>
         <input
           type="text"
           placeholder="Recipient address"
-          className="w-full px-4 py-3 mb-3 rounded-lg bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          value={to} onChange={e => setTo(e.target.value)}
+          className="w-full px-4 py-3 mb-4 rounded-lg bg-[#3a3a3a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFA500]"
+          value={to}
+          onChange={e => setTo(e.target.value)}
         />
         <input
           type="number"
-          placeholder="Amount in ETH"
-          className="w-full px-4 py-3 mb-4 rounded-lg bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          value={amount} onChange={e => setAmount(e.target.value)}
+          placeholder="Amount"
+          className="w-full px-4 py-3 mb-4 rounded-lg bg-[#3a3a3a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFA500]"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
         />
-
         <button
           onClick={sendETH}
-          className="bg-yellow-500 hover:bg-yellow-600 w-full py-3 mb-3 rounded-xl transition-all hover:scale-105"
+          className="bg-[#FFA500] text-black font-semibold w-full py-3 rounded-lg hover:bg-[#FFB733] transition-all flex items-center justify-center gap-2"
         >
-          Send ETH
-        </button>
-
-        <button
-          onClick={withdraw}
-          className="bg-red-500 hover:bg-red-600 w-full py-3 rounded-xl transition-all hover:scale-105"
-        >
-          Withdraw (Owner)
+          <span>Send</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
         </button>
       </div>
 
-      <div className="mt-10 w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-4 text-yellow-300">Transaction History</h2>
+      {/* History Section */}
+      <div className="bg-[#2a2a2a] p-6 rounded-lg w-full max-w-md shadow-lg mb-8">
+        <h2 className="text-[#FFA500] text-xl font-semibold mb-4">History</h2>
         {history.length === 0 ? (
           <p className="text-gray-400">No transactions yet.</p>
         ) : (
           history.map((h, i) => (
-            <div key={i} className="mb-4 bg-gray-600 p-4 rounded-lg shadow-sm">
-              <p className="text-sm">From: {h.from}</p>
-              <p className="text-sm">To: {h.to}</p>
-              <p className="text-sm text-green-300 font-semibold">Amount: {h.amount} ETH</p>
+            <div key={i} className="mb-4 bg-[#3a3a3a] p-4 rounded-lg">
+              <p className="text-sm text-gray-300">From: {h.from}</p>
+              <p className="text-sm text-gray-300">To: {h.to}</p>
+              <p className="text-sm text-[#FFA500] font-semibold">Amount: {h.amount} ETH</p>
             </div>
           ))
         )}
       </div>
+
+      {/* Wallet Balance Section */}
+      <div className="bg-[#2a2a2a] p-6 rounded-lg w-full max-w-md shadow-lg mb-8">
+        <h2 className="text-[#FFA500] text-xl font-semibold mb-4">Wallet Balance</h2>
+        <p className="text-3xl font-bold text-white">{balance} ETH</p>
+      </div>
+
+      {/* Owner Withdraw Section */}
+      <div className="bg-[#2a2a2a] p-6 rounded-lg w-full max-w-md shadow-lg mb-8">
+        <h2 className="text-[#FFA500] text-xl font-semibold mb-4">Owner Withdraw</h2>
+        <button
+          onClick={withdraw}
+          className="bg-red-500 hover:bg-red-600 w-full py-3 rounded-lg transition-all"
+        >
+          Owner Withdraw
+        </button>
+      </div>
+
+      {/* Footer */}
+      <footer className="text-gray-500 text-xs mt-8">
+        © 2025 PayChain. Built with Web3 ❤️
+      </footer>
     </div>
   );
 }
