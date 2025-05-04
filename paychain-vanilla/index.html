@@ -1,13 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>PayChain Payroll</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <h1>PayChain Payroll</h1>
-  <div id="app"></div>
-  <script src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PayChain Payroll</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.2.0/dist/ethers.min.js"></script>
+    <script src="app.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#D4AF37",
+              dark: "#0F172A",
+              card: "#1E293B",
+              danger: "#EF4444",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-dark text-white font-sans min-h-screen px-4 py-10">
+    <div class="max-w-2xl mx-auto space-y-8">
+
+      <!-- Logo & Intro -->
+      <div class="text-center">
+        <div class="text-5xl font-extrabold text-primary mb-2">Pc</div>
+        <h1 class="text-4xl font-bold text-primary mb-2">PayChain Payroll</h1>
+        <p class="text-gray-300 text-sm px-4">
+          Smart payroll system on blockchain — send & receive PTT with full control.
+        </p>
+        <button
+          id="connectBtn"
+          class="mt-4 bg-primary text-black font-bold py-2 px-6 rounded-full hover:bg-yellow-600 transition"
+        >
+          Connect Wallet
+        </button>
+      </div>
+
+      <!-- Send Form -->
+      <div class="bg-card rounded-2xl p-6 shadow-2xl space-y-4">
+        <h2 class="text-2xl font-semibold text-primary">Send Pharos</h2>
+        <input
+          type="text"
+          id="recipient"
+          placeholder="Recipient Address"
+          class="w-full bg-gray-800 text-white placeholder-gray-500 p-3 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+        />
+        <input
+          type="number"
+          id="amount"
+          placeholder="Amount (PTT)"
+          class="w-full bg-gray-800 text-white placeholder-gray-500 p-3 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+        />
+        <button
+          onclick="sendPTT()"
+          class="w-full bg-primary text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition"
+        >
+          ➤ Send
+        </button>
+      </div>
+
+      <!-- Wallet Balance -->
+      <div class="bg-card rounded-2xl p-6 shadow-xl space-y-2">
+        <h2 class="text-xl font-semibold text-primary">Wallet Balance</h2>
+        <p id="balance" class="text-lg">0.00 ETH</p>
+      </div>
+
+      <!-- Withdraw Section -->
+      <div class="bg-card rounded-2xl p-6 shadow-xl space-y-3">
+        <h2 class="text-xl font-semibold text-primary">Withdraw</h2>
+        <button
+          onclick="withdraw()"
+          class="bg-danger text-white font-bold py-2 px-4 rounded-full hover:bg-red-600 transition"
+        >
+          🔴 Owner Withdraw
+        </button>
+      </div>
+
+      <!-- Transaction History -->
+      <div class="bg-card rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-semibold text-primary mb-2">Event Logs</h2>
+        <ul id="eventLogs" class="text-sm text-gray-300 space-y-1"></ul>
+      </div>
+
+    </div>
+  </body>
 </html>
