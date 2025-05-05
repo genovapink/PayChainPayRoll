@@ -36,4 +36,4 @@ Traditional payment systems for remote and decentralized teams face:
 ## 📬 Contact & Links
 
 - Email: [genovaanakdoni@gmail.com](mailto:genovaanakdoni@gmail.com)  
-- Whitepaper: [https://app.gitbook.com/o/FbBhCMo4Q99dFPgxtRep/s/h0UaNrwIH4SRznMMtRdx](https://app.gitbook.com/o/FbBhCMo4Q99dFPgxtRep/s/h0UaNrwIH4SRznMMtRdx)
+- Whitepaper: https://genovaanakdonis-organization.gitbook.io/paychainpayroll
