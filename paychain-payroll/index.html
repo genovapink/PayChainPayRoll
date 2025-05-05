@@ -1,92 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PayChain Payroll</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.2.0/dist/ethers.min.js"></script>
-    <script src="app.js" defer></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: "#D4AF37",
-              dark: "#0F172A",
-              card: "#1E293B",
-              danger: "#EF4444",
-            },
-          },
-        },
-      };
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+    <style>
+      body {
+        background-color: #1f1f1f;
+        color: white;
+      }
+
+      .modal-bg {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: #2d2d2d;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 300px;
+      }
+
+      .modal-content button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 12px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: #facc15;
+        color: black;
+      }
+
+      .modal-content button:hover {
+        background-color: #eab308;
+      }
+    </style>
   </head>
+  <body class="font-sans px-4 sm:px-6 lg:px-8 py-10">
 
-  <body class="bg-dark text-white font-sans min-h-screen px-4 py-10">
-    <div class="max-w-2xl mx-auto space-y-8">
-
-      <!-- Logo & Intro -->
-      <div class="text-center">
-        <div class="text-5xl font-extrabold text-primary mb-2">Pc</div>
-        <h1 class="text-4xl font-bold text-primary mb-2">PayChain Payroll</h1>
-        <p class="text-gray-300 text-sm px-4">
-          Smart payroll system on blockchain — send & receive PTT with full control.
-        </p>
-        <button
-          id="connectBtn"
-          class="mt-4 bg-primary text-black font-bold py-2 px-6 rounded-full hover:bg-yellow-600 transition"
-        >
-          Connect Wallet
-        </button>
+    <!-- Wallet Modal -->
+    <div id="walletModal" class="modal-bg flex">
+      <div class="modal-content">
+        <h3 class="text-xl mb-4 text-yellow-400 font-bold">Choose Wallet</h3>
+        <button onclick="selectWallet('MetaMask')">MetaMask</button>
+        <button onclick="selectWallet('WalletConnect')">WalletConnect</button>
+        <button onclick="closeModal()">Cancel</button>
       </div>
-
-      <!-- Send Form -->
-      <div class="bg-card rounded-2xl p-6 shadow-2xl space-y-4">
-        <h2 class="text-2xl font-semibold text-primary">Send Pharos</h2>
-        <input
-          type="text"
-          id="recipient"
-          placeholder="Recipient Address"
-          class="w-full bg-gray-800 text-white placeholder-gray-500 p-3 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
-        />
-        <input
-          type="number"
-          id="amount"
-          placeholder="Amount (PTT)"
-          class="w-full bg-gray-800 text-white placeholder-gray-500 p-3 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
-        />
-        <button
-          onclick="sendPTT()"
-          class="w-full bg-primary text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition"
-        >
-          ➤ Send
-        </button>
-      </div>
-
-      <!-- Wallet Balance -->
-      <div class="bg-card rounded-2xl p-6 shadow-xl space-y-2">
-        <h2 class="text-xl font-semibold text-primary">Wallet Balance</h2>
-        <p id="balance" class="text-lg">0.00 ETH</p>
-      </div>
-
-      <!-- Withdraw Section -->
-      <div class="bg-card rounded-2xl p-6 shadow-xl space-y-3">
-        <h2 class="text-xl font-semibold text-primary">Withdraw</h2>
-        <button
-          onclick="withdraw()"
-          class="bg-danger text-white font-bold py-2 px-4 rounded-full hover:bg-red-600 transition"
-        >
-          🔴 Owner Withdraw
-        </button>
-      </div>
-
-      <!-- Transaction History -->
-      <div class="bg-card rounded-2xl p-6 shadow-xl">
-        <h2 class="text-xl font-semibold text-primary mb-2">Event Logs</h2>
-        <ul id="eventLogs" class="text-sm text-gray-300 space-y-1"></ul>
-      </div>
-
     </div>
+
+    <!-- Main UI -->
+    <div class="max-w-xl mx-auto text-center">
+      <div class="text-5xl font-extrabold text-yellow-400 mb-4">Pc</div>
+      <h1 class="text-4xl font-bold text-yellow-400 mb-2">PayChain Payroll</h1>
+      <p class="text-gray-300 text-md mb-6">
+        Smart payroll system on blockchain — send & receive PTT with full control.
+      </p>
+      <button onclick="openModal()" id="connectBtn" class="bg-yellow-500 text-black font-bold py-2 px-4 rounded-xl hover:bg-yellow-600 transition">
+        Connect Wallet
+      </button>
+    </div>
+
+    <!-- Send ETH -->
+    <div class="max-w-xl mx-auto mt-10 bg-gray-900 rounded-2xl shadow-2xl p-6 space-y-4">
+      <h2 class="text-2xl font-semibold text-yellow-400">Send Pharos</h2>
+      <input type="text" id="recipient" placeholder="Recipient Address" class="w-full p-3 rounded-lg bg-gray-800 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-yellow-500" />
+      <input type="number" id="amount" placeholder="Amount (PTT)" class="w-full p-3 rounded-lg bg-gray-800 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-yellow-500" />
+      <button onclick="sendETH()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-xl transition duration-300">
+        ➤ Send
+      </button>
+    </div>
+
+    <!-- Wallet Balance -->
+    <div class="max-w-xl mx-auto mt-8 bg-gray-900 rounded-2xl shadow-xl p-4">
+      <h2 class="text-xl font-semibold text-yellow-400">Wallet Balance</h2>
+      <p id="balance" class="mt-1 text-white">0.00 ETH</p>
+    </div>
+
+    <!-- Withdraw Section -->
+    <div class="max-w-xl mx-auto mt-4 bg-gray-900 rounded-2xl shadow-xl p-4">
+      <h2 class="text-xl font-semibold text-yellow-400">Withdraw</h2>
+      <button onclick="toggleWithdrawOptions()" class="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl">
+        🔒 Owner Withdraw
+      </button>
+      <div id="withdrawOptions" class="mt-4 space-y-2 hidden">
+        <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 rounded-xl">🏦 Withdraw to Bank</button>
+        <button onclick="withdraw()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-xl">💰 Withdraw to Wallet</button>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="max-w-xl mx-auto mt-6 bg-gray-900 rounded-2xl shadow-xl p-4">
+      <h2 class="text-xl font-semibold text-yellow-400">Transaction History</h2>
+      <ul id="txHistory" class="list-disc list-inside text-sm text-gray-300 mt-2"></ul>
+    </div>
+
+    <!-- Footer -->
+    <p class="mt-10 text-center text-gray-500 text-sm">
+      © 2025 PayChain. Built with Web3 ❤️
+    </p>
+
+    <!-- Script Section -->
+    <script>
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      let signer, userAddress;
+
+      async function connectWallet() {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          signer = await provider.getSigner();
+          userAddress = accounts[0];
+          document.getElementById('connectBtn').innerText = 'Connected: ' + userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+          closeModal();
+          updateBalance();
+          listenForEvents();
+        } catch (err) {
+          alert('Wallet connection failed!');
+          console.error(err);
+        }
+      }
+
+      const contractAddress = "0x7f37fb1882A33593A842748A71781Bf4Cea169DD";
+      const abi = [
+        "function sendEth(address recipient) payable",
+        "function withdraw()",
+        "event PaymentSent(address indexed from, address indexed to, uint amount)"
+      ];
+      const contract = new ethers.Contract(contractAddress, abi, provider);
+
+      async function sendETH() {
+        const recipient = document.getElementById("recipient").value;
+        const amount = document.getElementById("amount").value;
+        if (!recipient || !amount) return alert("Fill both fields!");
+
+        try {
+          const tx = await contract.connect(signer).sendEth(recipient, { value: ethers.parseEther(amount) });
+          await tx.wait();
+          alert("✅ ETH Sent!");
+          updateBalance();
+        } catch (err) {
+          alert("❌ Transaction failed.");
+          console.error(err);
+        }
+      }
+
+      async function updateBalance() {
+        if (!signer) return;
+        const balance = await provider.getBalance(userAddress);
+        document.getElementById("balance").innerText = ethers.formatEther(balance) + " ETH";
+      }
+
+      async function withdraw() {
+        try {
+          const tx = await contract.connect(signer).withdraw();
+          await tx.wait();
+          alert("✅ Withdraw successful!");
+          updateBalance();
+        } catch (err) {
+          alert("❌ Only owner can withdraw.");
+          console.error(err);
+        }
+      }
+
+      function listenForEvents() {
+        contract.on("PaymentSent", (from, to, amount) => {
+          const li = document.createElement("li");
+          li.innerText = `💸 ${from.slice(0, 6)}... → ${to.slice(0, 6)}... : ${ethers.formatEther(amount)} ETH`;
+          document.getElementById("txHistory").prepend(li);
+        });
+      }
+
+      function toggleWithdrawOptions() {
+        const options = document.getElementById('withdrawOptions');
+        options.classList.toggle('hidden');
+      }
+
+      function openModal() {
+        document.getElementById("walletModal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("walletModal").style.display = "none";
+      }
+
+      function selectWallet(name) {
+        alert("🔗 Dummy: " + name + " selected");
+        connectWallet();
+      }
+    </script>
   </body>
 </html>
