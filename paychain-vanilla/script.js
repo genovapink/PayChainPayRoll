@@ -1,36 +1,81 @@
-import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.7.0/+esm";
-import { abi } from "./abi.js";
+const provider = new ethers.BrowserProvider(window.ethereum);
+let signer, userAddress;
+let contract;
 
-const contractAddress = "0x4499FBAebF8eEa3A302cBc52BFeBd468fFf4c00B";
-let provider, signer, contract;
+// Contract details
+const contractAddress = "0x7f37fb1882A33593A842748A71781Bf4Cea169DD";
+const abi = [
+  "function sendEth(address recipient) payable",
+  "function withdraw()",
+  "event PaymentSent(address indexed from, address indexed to, uint amount)"
+];
 
-document.getElementById("connectButton").onclick = async () => {
-  if (!window.ethereum) return alert("Install MetaMask!");
+async function connectWallet() {
+  const walletOptions = document.getElementById("walletOptions");
+  walletOptions.classList.remove("hidden");
+}
 
-  provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer = await provider.getSigner();
-  contract = new ethers.Contract(contractAddress, abi, signer);
+function selectWallet(option) {
+  document.getElementById("walletOptions").classList.add("hidden");
 
-  const address = await signer.getAddress();
-  document.getElementById("walletAddress").innerText = `Connected: ${address}`;
+  window.ethereum.request({ method: 'eth_requestAccounts' })
+    .then(async (accounts) => {
+      signer = await provider.getSigner();
+      userAddress = accounts[0];
+      contract = new ethers.Contract(contractAddress, abi, provider);
 
-  const balance = await provider.getBalance(address);
-  document.getElementById("balance").innerText = `Balance: ${ethers.formatEther(balance)} ETH`;
-};
+      document.getElementById("connectBtn").innerText = 'Connected: ' + userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+      updateBalance();
+      listenForEvents();
+    })
+    .catch((err) => {
+      alert('Wallet connection failed!');
+      console.error(err);
+    });
+}
 
-document.getElementById("sendButton").onclick = async () => {
+async function sendETH() {
   const recipient = document.getElementById("recipient").value;
   const amount = document.getElementById("amount").value;
-  if (!recipient || !amount) return alert("Please fill all fields");
+  if (!recipient || !amount) return alert("Fill both fields!");
 
-  const tx = await contract.send(recipient, ethers.parseEther(amount));
+  const tx = await contract.connect(signer).sendEth(recipient, { value: ethers.parseEther(amount) });
   await tx.wait();
-  alert("Transaction sent!");
-};
+  alert("✅ ETH Sent!");
+  updateBalance();
+}
 
-document.getElementById("withdrawButton").onclick = async () => {
-  const tx = await contract.withdraw();
-  await tx.wait();
-  alert("Withdraw successful!");
-};
+async function updateBalance() {
+  if (!signer) return;
+  const balance = await provider.getBalance(userAddress);
+  document.getElementById("balance").innerText = ethers.formatEther(balance) + " ETH";
+}
+
+async function withdraw() {
+  document.getElementById("withdrawActions").classList.remove("hidden");
+}
+
+async function confirmWithdraw() {
+  try {
+    const tx = await contract.connect(signer).withdraw();
+    await tx.wait();
+    alert("✅ Withdraw successful!");
+    updateBalance();
+    document.getElementById("withdrawActions").classList.add("hidden");
+  } catch (err) {
+    alert("❌ Only owner can withdraw.");
+    console.error(err);
+  }
+}
+
+function cancelWithdraw() {
+  document.getElementById("withdrawActions").classList.add("hidden");
+}
+
+function listenForEvents() {
+  contract.on("PaymentSent", (from, to, amount) => {
+    const li = document.createElement("li");
+    li.innerText = `💸 ${from.slice(0, 6)}... → ${to.slice(0, 6)}... : ${ethers.formatEther(amount)} ETH`;
+    document.getElementById("txHistory").prepend(li);
+  });
+}
